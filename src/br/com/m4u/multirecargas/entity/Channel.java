@@ -7,6 +7,11 @@ public class Channel implements Serializable {
     private String name;
     private List<ChannelValue> values;
 
+    public Channel(String name, List<ChannelValue> values) {
+        this.name = name;
+        this.values = values;
+    }
+
     public String getName() {
         return name;
     }
@@ -19,8 +24,11 @@ public class Channel implements Serializable {
         this.name = name;
     }
 
-    public Channel(String name, List<ChannelValue> values) {
-        this.name = name;
+    public List<ChannelValue> getValues() {
+        return values;
+    }
+
+    public void setValues(List<ChannelValue> values) {
         this.values = values;
     }
 }
