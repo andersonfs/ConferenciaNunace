@@ -22,18 +22,28 @@ public class ComparisonService implements Serializable {
     }
 
     private void compare(final Map<String, Channel> configurationMap, final List<Product> productList, final String outputPath) {
-        final List<Channel> channelsNotFoundList = new ArrayList<>();
+        final List<String> channelsNotFoundList = new ArrayList<>();
         final List<Product> productsNotFoundList = new ArrayList<>();
 
         for (final Product product: productList) {
             System.out.println("Lendo o Produto " + product.getAmount());
             final Channel channel = configurationMap.get(product.getChannel());
             if (channel != null) {
-                if(!findProduct(channel, product)) {
+                if(!findProduct(channel.getValues(), product)) {
                     productsNotFoundList.add(product);
                 }
             } else {
-                channelsNotFoundList.add(channel);
+                Boolean found = Boolean.FALSE;
+                for (final String channelName: channelsNotFoundList) {
+                    if(channelName.equals(product.getChannel())) {
+                        found = Boolean.TRUE;
+                        break;
+                    }
+
+                }
+                if(!found) {
+                    channelsNotFoundList.add(product.getChannel());
+                }
             }
         }
 
@@ -41,9 +51,9 @@ public class ComparisonService implements Serializable {
         handleProductNotFound(outputPath, productsNotFoundList);
     }
 
-    private Boolean findProduct(final Channel channel, final Product product) {
-        for (final ChannelValue value : channel.getValues()) {
-            if (value.getValue().equals(product.getAmount())) {
+    private Boolean findProduct(final List<ChannelValue> channelValueList, final Product product) {
+        for (final ChannelValue value : channelValueList) {
+            if (value.getDdd().equals(product.getDdd()) && value.getValue().equals(product.getAmount())) {
                 return true;
             }
         }
@@ -53,12 +63,12 @@ public class ComparisonService implements Serializable {
     private void handleProductNotFound(final String outputPath, final List<Product> productList) {
         if(productList != null && !productList.isEmpty()) {
             try {
-                final String fileName = outputPath + "\\" + "products_not_found.txt";
+                final String fileName = outputPath  + "/products_not_found.txt";
                 final FileWriter resultFile = new FileWriter(fileName);
                 final PrintWriter writer = new PrintWriter(resultFile);
                 writer.println("===Inicio do arquivo de conferencia======");
                 for (final Product product: productList) {
-                    writer.printf("%s - %s - %n", product.getChannel(), product.getDdd(), product.getAmount());
+                    writer.printf("%s - %s - %d \n", product.getChannel(), product.getDdd(), product.getAmount());
                 }
                 writer.println("===Fim do arquivo de conferencia======");
                 resultFile.close();
@@ -68,15 +78,15 @@ public class ComparisonService implements Serializable {
         }
     }
 
-    private void handleChannelNotFound(final String outputPath, final List<Channel> channelList) {
+    private void handleChannelNotFound(final String outputPath, final List<String> channelList) {
         if(channelList != null && !channelList.isEmpty()) {
             try {
-                final String fileName = outputPath + "\\" + "products_not_found.txt";
+                final String fileName = outputPath  + "/products_not_found.txt";
                 final FileWriter resultFile = new FileWriter(fileName);
                 final PrintWriter writer = new PrintWriter(resultFile);
                 writer.println("===Inicio do arquivo de conferencia======");
-                for (final Channel channel: channelList) {
-                    writer.println(channel.getName());
+                for (final String channel: channelList) {
+                    writer.println(channel);
                 }
                 writer.println("===Fim do arquivo de conferencia======");
                 resultFile.close();
