@@ -3,9 +3,11 @@ package br.com.m4u.multirecargas.service;
 import br.com.m4u.multirecargas.entity.Channel;
 import br.com.m4u.multirecargas.entity.ChannelValue;
 import br.com.m4u.multirecargas.entity.Product;
+import br.com.m4u.multirecargas.entity.ProductValue;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,37 +15,28 @@ public class ComparisonService implements Serializable {
 
     public Integer init(final Map<String, Channel> configurationMap, final String fileName, final String outputPath) {
         if(configurationMap != null) {
-            final List<Product> productList = loadFile(fileName);
-            compare(configurationMap, productList, outputPath);
+            final Map<String, Product> productMap = loadFile(fileName);
+            compare(configurationMap, productMap, outputPath);
         } else {
             System.out.println("Ocorreu um erro ao tentar carregar o arquivo de configuracao.");
         }
         return 3;
     }
 
-    private void compare(final Map<String, Channel> configurationMap, final List<Product> productList, final String outputPath) {
+    private void compare(final Map<String, Channel> channelMap, final Map<String, Product> productMap, final String outputPath) {
         final List<String> channelsNotFoundList = new ArrayList<>();
-        final List<Product> productsNotFoundList = new ArrayList<>();
+        final List<ProductValue> productsNotFoundList = new ArrayList<>();
 
-        for (final Product product: productList) {
-            System.out.println("Lendo o Produto " + product.getAmount());
-            final Channel channel = configurationMap.get(product.getChannel());
+        for(Map.Entry<String, Product> productEntry : productMap.entrySet()) {
+            final Channel channel = channelMap.get(productEntry.getKey());
             if (channel != null) {
-                if(!findProduct(channel.getValues(), product)) {
-                    productsNotFoundList.add(product);
+                for (final ProductValue productValue : productEntry.getValue().getValues()) {
+                    if (!findProduct(channel.getValues(), productValue)) {
+                        productsNotFoundList.add(productValue);
+                    }
                 }
             } else {
-                Boolean found = Boolean.FALSE;
-                for (final String channelName: channelsNotFoundList) {
-                    if(channelName.equals(product.getChannel())) {
-                        found = Boolean.TRUE;
-                        break;
-                    }
-
-                }
-                if(!found) {
-                    channelsNotFoundList.add(product.getChannel());
-                }
+                channelsNotFoundList.add(productEntry.getKey());
             }
         }
 
@@ -51,24 +44,24 @@ public class ComparisonService implements Serializable {
         handleProductNotFound(outputPath, productsNotFoundList);
     }
 
-    private Boolean findProduct(final List<ChannelValue> channelValueList, final Product product) {
+    private Boolean findProduct(final List<ChannelValue> channelValueList, final ProductValue productValue) {
         for (final ChannelValue value : channelValueList) {
-            if (value.getDdd().equals(product.getDdd()) && value.getValue().equals(product.getAmount())) {
+            if (value.getDdd().equals(productValue.getDdd()) && value.getValue().equals(productValue.getAmount())) {
                 return true;
             }
         }
         return false;
     }
 
-    private void handleProductNotFound(final String outputPath, final List<Product> productList) {
+    private void handleProductNotFound(final String outputPath, final List<ProductValue> productList) {
         if(productList != null && !productList.isEmpty()) {
             try {
                 final String fileName = outputPath  + "/products_not_found.txt";
                 final FileWriter resultFile = new FileWriter(fileName);
                 final PrintWriter writer = new PrintWriter(resultFile);
                 writer.println("===Inicio do arquivo de conferencia======");
-                for (final Product product: productList) {
-                    writer.printf("%s - %s - %d \n", product.getChannel(), product.getDdd(), product.getAmount());
+                for (final ProductValue productValue: productList) {
+                    writer.printf("%s - %s - %d \n", productValue.getProduct().getChannel(), productValue.getDdd(), productValue.getAmount());
                 }
                 writer.println("===Fim do arquivo de conferencia======");
                 resultFile.close();
@@ -96,11 +89,11 @@ public class ComparisonService implements Serializable {
         }
     }
 
-    private List<Product> loadFile(final String fileName) {
+    private Map<String, Product> loadFile(final String fileName) {
         BufferedReader reader = null;
         String line = "";
         final String csvDivisor = ",";
-        final List<Product> productList = new ArrayList<>();
+        final Map<String, Product> productMap = new HashMap<>();
 
         try {
             reader = new BufferedReader(new FileReader(fileName));
@@ -108,8 +101,12 @@ public class ComparisonService implements Serializable {
             while ((line = reader.readLine()) != null) {
                 if(!firstLine) {
                     final String[] parts = line.split(csvDivisor);
-                    productList.add(new Product(parts[0], parts[1]
-                            ,Integer.valueOf(parts[2])));
+                    Product product = productMap.get(parts[0]);
+                    if(product== null) {
+                        product = new Product(parts[0]);
+                        productMap.put(product.getChannel(), product);
+                    }
+                    product.addValue(parts[1], Integer.valueOf(parts[2]));
                 }
                 firstLine = Boolean.FALSE;
             }
@@ -126,6 +123,6 @@ public class ComparisonService implements Serializable {
                 }
             }
         }
-        return productList;
+        return productMap;
     }
 }

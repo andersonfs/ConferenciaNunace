@@ -1,11 +1,16 @@
 package br.com.m4u.multirecargas.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Product implements Serializable {
     private String channel;
-    private String ddd;
-    private Integer amount;
+    private List<ProductValue> values;
+
+    public Product(String channel) {
+        this.channel = channel;
+    }
 
     public String getChannel() {
         return channel;
@@ -15,25 +20,19 @@ public class Product implements Serializable {
         this.channel = channel;
     }
 
-    public String getDdd() {
-        return ddd;
+    public List<ProductValue> getValues() {
+        return values;
     }
 
-    public void setDdd(String ddd) {
-        this.ddd = ddd;
+    public void setValues(List<ProductValue> values) {
+        this.values = values;
     }
 
-    public Integer getAmount() {
-        return amount;
-    }
+    public void addValue(final String ddd, final Integer amount) {
+        if (this.values == null) {
+            this.values = new ArrayList<>();
+        }
 
-    public void setAmount(Integer amount) {
-        this.amount = amount;
-    }
-
-    public Product(String channel, String ddd, Integer amount) {
-        this.channel = channel;
-        this.ddd = ddd;
-        this.amount = amount;
+        this.values.add(new ProductValue(this, ddd, amount));
     }
 }
