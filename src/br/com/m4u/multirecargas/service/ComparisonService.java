@@ -74,7 +74,7 @@ public class ComparisonService implements Serializable {
     private void handleChannelNotFound(final String outputPath, final List<String> channelList) {
         if(channelList != null && !channelList.isEmpty()) {
             try {
-                final String fileName = outputPath  + "/products_not_found.txt";
+                final String fileName = outputPath  + "/channels_not_found.txt";
                 final FileWriter resultFile = new FileWriter(fileName);
                 final PrintWriter writer = new PrintWriter(resultFile);
                 writer.println("===Inicio do arquivo de conferencia======");
