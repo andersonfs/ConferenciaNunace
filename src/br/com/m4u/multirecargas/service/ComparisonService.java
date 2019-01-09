@@ -13,10 +13,10 @@ import java.util.Map;
 
 public class ComparisonService implements Serializable {
 
-    public Integer init(final Map<String, Channel> configurationMap, final String fileName, final String outputPath) {
-        if(configurationMap != null) {
+    public Integer init(final Map<String, Channel> channelMap, final String fileName, final String outputPath) {
+        if(channelMap != null) {
             final Map<String, Product> productMap = loadFile(fileName);
-            compare(configurationMap, productMap, outputPath);
+            compare(channelMap, productMap, outputPath);
         } else {
             System.out.println("Ocorreu um erro ao tentar carregar o arquivo de configuracao.");
         }
@@ -25,18 +25,18 @@ public class ComparisonService implements Serializable {
 
     private void compare(final Map<String, Channel> channelMap, final Map<String, Product> productMap, final String outputPath) {
         final List<String> channelsNotFoundList = new ArrayList<>();
-        final List<ProductValue> productsNotFoundList = new ArrayList<>();
+        final List<ChannelValue> productsNotFoundList = new ArrayList<>();
 
-        for(Map.Entry<String, Product> productEntry : productMap.entrySet()) {
-            final Channel channel = channelMap.get(productEntry.getKey());
-            if (channel != null) {
-                for (final ProductValue productValue : productEntry.getValue().getValues()) {
-                    if (!findProduct(channel.getValues(), productValue)) {
-                        productsNotFoundList.add(productValue);
+        for(Map.Entry<String, Channel> channelEntry : channelMap.entrySet()) {
+            final Product product = productMap.get(channelEntry.getKey());
+            if (product != null) {
+                for (final ChannelValue channelValue : channelEntry.getValue().getValues()) {
+                    if (!findProduct(product.getValues(), channelValue)) {
+                        productsNotFoundList.add(channelValue);
                     }
                 }
             } else {
-                channelsNotFoundList.add(productEntry.getKey());
+                channelsNotFoundList.add(channelEntry.getKey());
             }
         }
 
@@ -44,24 +44,29 @@ public class ComparisonService implements Serializable {
         handleProductNotFound(outputPath, productsNotFoundList);
     }
 
-    private Boolean findProduct(final List<ChannelValue> channelValueList, final ProductValue productValue) {
-        for (final ChannelValue value : channelValueList) {
-            if (value.getDdd().equals(productValue.getDdd()) && value.getValue().equals(productValue.getAmount())) {
+    private Boolean findProduct(final List<ProductValue> productValuesList, final ChannelValue channelValue) {
+        for (final ProductValue value : productValuesList) {
+            if (value.getDdd().equals(channelValue.getDdd()) && value.getAmount().equals(channelValue.getValue())) {
                 return true;
             }
         }
         return false;
     }
 
-    private void handleProductNotFound(final String outputPath, final List<ProductValue> productList) {
+    private void handleProductNotFound(final String outputPath, final List<ChannelValue> productList) {
         if(productList != null && !productList.isEmpty()) {
             try {
                 final String fileName = outputPath  + "/products_not_found.txt";
                 final FileWriter resultFile = new FileWriter(fileName);
                 final PrintWriter writer = new PrintWriter(resultFile);
                 writer.println("===Inicio do arquivo de conferencia======");
-                for (final ProductValue productValue: productList) {
-                    writer.printf("%s - %s - %d \n", productValue.getProduct().getChannel(), productValue.getDdd(), productValue.getAmount());
+                for (final ChannelValue channelValue: productList) {
+                    writer.printf("%s - %s - %d - %d - %d \n",
+                            channelValue.getChannel().getName(),
+                            channelValue.getDdd(),
+                            channelValue.getValue(),
+                            channelValue.getBonusValue(),
+                            channelValue.getDaysOfValidity());
                 }
                 writer.println("===Fim do arquivo de conferencia======");
                 resultFile.close();

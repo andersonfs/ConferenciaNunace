@@ -3,6 +3,7 @@ package br.com.m4u.multirecargas.entity;
 import java.io.Serializable;
 
 public class ChannelValue implements Serializable {
+    private Channel channel;
     private String ddd;
     private Integer value;
     private Integer bonusValue;
@@ -13,6 +14,14 @@ public class ChannelValue implements Serializable {
         this.value = value;
         this.bonusValue = bonusValue;
         this.daysOfValidity = daysOfValidity;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public String getDdd() {

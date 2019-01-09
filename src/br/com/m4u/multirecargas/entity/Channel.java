@@ -9,6 +9,9 @@ public class Channel implements Serializable {
 
     public Channel(String name, List<ChannelValue> values) {
         this.name = name;
+        for (final ChannelValue value : values) {
+            value.setChannel(this);
+        }
         this.values = values;
     }
 
